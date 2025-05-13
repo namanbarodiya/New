@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,28 +30,8 @@ export function AskAIDialog({ open, onOpenChange, article }: AskAIDialogProps) {
 
     setLoading(true);
     try {
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-
-      const prompt = `Based on this article titled "${article.title}", answer the following question:\n\nArticle Content:\n${article.content}\n\nQuestion:\n${question}`;
-
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${AIzaSyB4KLI31l6SBCWzGOLQC2FiueRcIyzFDlc}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        setAnswer(data.candidates[0].content.parts[0].text);
-      } else {
-        setAnswer("Sorry, I couldn't find a good answer. Please try again.");
-      }
+      // In a real implementation, this would make an API call to your AI service
+      setAnswer("This is a placeholder response. In a real implementation, this would be an AI-generated response based on the article content and your question.");
     } catch (error) {
       console.error("Failed to get AI response:", error);
       setAnswer("Sorry, I couldn't process your question at this time. Please try again later.");
@@ -87,7 +69,7 @@ export function AskAIDialog({ open, onOpenChange, article }: AskAIDialogProps) {
             <div className="mt-6">
               <h4 className="text-sm font-medium mb-2">Answer:</h4>
               <div className="bg-muted p-4 rounded-lg">
-                <p className="text-sm whitespace-pre-wrap">{answer}</p>
+                <p className="text-sm">{answer}</p>
               </div>
             </div>
           )}
