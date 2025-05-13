@@ -1,87 +1,45 @@
-"use client";
+// lib/api/gemini.ts
+export async function askQuestion(
+  question: string,
+  title: string,
+  content: string
+): Promise<{ success: boolean; data?: { answer: string }; error?: string }> {
+  const API_KEY = "AIzaSyB4KLI31l6SBCWzGOLQC2FiueRcIyzFDlc";
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
 
-import { useState } from "react";
-import { Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogDescription
-} from "@/components/ui/dialog";
-import { NewsArticle } from "@/types/news";
-import { generateSummary } from "@/lib/api/gemini";
-import { toast } from "sonner";
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `Answer the following question based on this news article:\n\nTitle: ${title}\n\nContent: ${content}\n\nQuestion: ${question}`,
+              },
+            ],
+          },
+        ],
+      }),
+    });
 
-interface AskAIDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  article: NewsArticle;
-}
+    const data = await res.json();
 
-export function AskAIDialog({ open, onOpenChange, article }: AskAIDialogProps) {
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!question.trim() || loading) return;
-
-    setLoading(true);
-    try {
-      const response = await askQuestion(question, article.title, article.content);
-      
-      if (response.success) {
-        setAnswer(response.data.answer);
-      } else {
-        toast.error(response.error || "Failed to get AI response");
-      }
-    } catch (error) {
-      console.error("Failed to get AI response:", error);
-      toast.error("Sorry, I couldn't process your question at this time. Please try again later.");
-    } finally {
-      setLoading(false);
+    if (data.error) {
+      console.error("Gemini API Error:", data.error);
+      return { success: false, error: data.error.message };
     }
-  };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Ask AI about this article</DialogTitle>
-          <DialogDescription>
-            Ask questions about "{article.title}" and get AI-powered answers
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Textarea
-            placeholder="Ask your question about the article..."
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            className="min-h-[100px]"
-          />
-          
-          <div className="flex justify-end">
-            <Button type="submit" disabled={loading || !question.trim()}>
-              <Send className="mr-2 h-4 w-4" />
-              {loading ? "Thinking..." : "Ask AI"}
-            </Button>
-          </div>
-
-          {answer && (
-            <div className="mt-6">
-              <h4 className="text-sm font-medium mb-2">Answer:</h4>
-              <div className="bg-muted p-4 rounded-lg">
-                <p className="text-sm whitespace-pre-line">{answer}</p>
-              </div>
-            </div>
-          )}
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+    const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    return {
+      success: true,
+      data: { answer: answer || "AI could not generate an answer." },
+    };
+  } catch (error) {
+    console.error("Error calling Gemini API:", error);
+    return { success: false, error: "Request to AI failed." };
+  }
 }
