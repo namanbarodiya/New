@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { generateSummary } from "@/lib/api/gemini";
-
+import { generateSummary } from "@/lib/api/openai";
 
 interface AISummaryContentProps {
   articleId: string;
