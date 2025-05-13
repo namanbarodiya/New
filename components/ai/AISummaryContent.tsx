@@ -8,32 +8,35 @@ import { generateSummary } from "@/lib/api/openai";
 interface AISummaryContentProps {
   articleId: string;
   articleTitle: string;
+  articleContent?: string; // Add this to receive full content
 }
 
-export function AISummaryContent({ articleId, articleTitle }: AISummaryContentProps) {
+export function AISummaryContent({
+  articleId,
+  articleTitle,
+  articleContent,
+}: AISummaryContentProps) {
   const [loading, setLoading] = useState(true);
   const [bulletPoints, setBulletPoints] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  
+
   useEffect(() => {
     async function loadSummary() {
       try {
-        // Check if we have a cached summary
-        const cachedSummary = localStorage.getItem(`summary-${articleId}`);
-        
+        const cacheKey = `summary-${articleId}`;
+        const cachedSummary = localStorage.getItem(cacheKey);
+
         if (cachedSummary) {
           setBulletPoints(JSON.parse(cachedSummary));
           setLoading(false);
           return;
         }
-        
-        // Generate new summary
-        const response = await generateSummary(articleTitle);
-        
+
+        const response = await generateSummary(articleTitle, articleContent);
+
         if (response.success) {
           setBulletPoints(response.data.summary);
-          // Cache the summary
-          localStorage.setItem(`summary-${articleId}`, JSON.stringify(response.data.summary));
+          localStorage.setItem(cacheKey, JSON.stringify(response.data.summary));
         } else {
           setError(response.error || "Failed to generate summary");
         }
@@ -44,10 +47,10 @@ export function AISummaryContent({ articleId, articleTitle }: AISummaryContentPr
         setLoading(false);
       }
     }
-    
+
     loadSummary();
-  }, [articleId, articleTitle]);
-  
+  }, [articleId, articleTitle, articleContent]);
+
   if (loading) {
     return (
       <div className="py-4">
@@ -63,7 +66,7 @@ export function AISummaryContent({ articleId, articleTitle }: AISummaryContentPr
       </div>
     );
   }
-  
+
   if (error) {
     return (
       <div className="py-4">
@@ -74,7 +77,7 @@ export function AISummaryContent({ articleId, articleTitle }: AISummaryContentPr
       </div>
     );
   }
-  
+
   return (
     <div className="py-4">
       <p className="text-sm text-muted-foreground mb-4">
