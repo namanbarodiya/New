@@ -8,35 +8,32 @@ import { generateSummary } from "@/lib/api/openai";
 interface AISummaryContentProps {
   articleId: string;
   articleTitle: string;
-  articleContent?: string; // Add this to receive full content
 }
 
-export function AISummaryContent({
-  articleId,
-  articleTitle,
-  articleContent,
-}: AISummaryContentProps) {
+export function AISummaryContent({ articleId, articleTitle }: AISummaryContentProps) {
   const [loading, setLoading] = useState(true);
   const [bulletPoints, setBulletPoints] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-
+  
   useEffect(() => {
     async function loadSummary() {
       try {
-        const cacheKey = `summary-${articleId}`;
-        const cachedSummary = localStorage.getItem(cacheKey);
-
+        // Check if we have a cached summary
+        const cachedSummary = localStorage.getItem(`summary-${articleId}`);
+        
         if (cachedSummary) {
           setBulletPoints(JSON.parse(cachedSummary));
           setLoading(false);
           return;
         }
-
-        const response = await generateSummary(articleTitle, articleContent);
-
+        
+        // Generate new summary
+        const response = await generateSummary(articleTitle);
+        
         if (response.success) {
           setBulletPoints(response.data.summary);
-          localStorage.setItem(cacheKey, JSON.stringify(response.data.summary));
+          // Cache the summary
+          localStorage.setItem(`summary-${articleId}`, JSON.stringify(response.data.summary));
         } else {
           setError(response.error || "Failed to generate summary");
         }
@@ -47,10 +44,10 @@ export function AISummaryContent({
         setLoading(false);
       }
     }
-
+    
     loadSummary();
-  }, [articleId, articleTitle, articleContent]);
-
+  }, [articleId, articleTitle]);
+  
   if (loading) {
     return (
       <div className="py-4">
@@ -66,7 +63,7 @@ export function AISummaryContent({
       </div>
     );
   }
-
+  
   if (error) {
     return (
       <div className="py-4">
@@ -77,7 +74,7 @@ export function AISummaryContent({
       </div>
     );
   }
-
+  
   return (
     <div className="py-4">
       <p className="text-sm text-muted-foreground mb-4">
