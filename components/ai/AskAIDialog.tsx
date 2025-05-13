@@ -12,7 +12,7 @@ import {
   DialogDescription
 } from "@/components/ui/dialog";
 import { NewsArticle } from "@/types/news";
-import { askQuestion } from "@/lib/api/openai";
+import { generateSummary } from "@/lib/api/gemini";
 import { toast } from "sonner";
 
 interface AskAIDialogProps {
